@@ -16,6 +16,8 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key-change-me")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 300))
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@gym.com")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
@@ -129,13 +131,13 @@ async def logout():
 
 # Helper to inject initial admin
 def create_initial_admin(session: Session):
-    user = session.exec(select(User).where(User.email == "admin@gym.com")).first()
+    user = session.exec(select(User).where(User.email == ADMIN_EMAIL)).first()
     if not user:
         admin = User(
             name="Super Admin",
-            email="admin@gym.com",
+            email=ADMIN_EMAIL,
             role="admin",
-            hashed_password=get_password_hash("admin123"), # Default password
+            hashed_password=get_password_hash(ADMIN_PASSWORD), 
             qr_code_data="admin-qr"
         )
         session.add(admin)
