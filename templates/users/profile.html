@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil: {{ user.name }} - Gym Manager Pro{% endblock %}
+
+{% block head %}
+<style>
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 3rem;
+    }
+
+    .profile-info {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border-radius: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 15px 30px var(--primary-glow);
+    }
+
+    .profile-meta h1 {
+        margin: 0;
+        font-size: 2.5rem;
+    }
+
+    .profile-meta p {
+        color: var(--text-muted);
+        margin: 0.5rem 0 0 0;
+        font-size: 1.1rem;
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .section-card {
+        background: var(--surface);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--surface-border);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .data-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--surface-border);
+    }
+
+    .data-row:last-child {
+        border-bottom: none;
+    }
+
+    .data-label {
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .data-value {
+        font-weight: 600;
+    }
+
+    .badge-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 99px;
+        font-size: 0.8125rem;
+        font-weight: 700;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+
+    .status-expired {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        text-align: left;
+        padding: 1rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        border-bottom: 1px solid var(--surface-border);
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--surface-border);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="profile-info">
+        <div class="profile-avatar">{{ user.name[0] | upper }}</div>
+        <div class="profile-meta">
+            <h1>{{ user.name }}</h1>
+            <p>{{ user.email }} • Socio GM-{{ "%04d"|format(user.id) }}</p>
+        </div>
+    </div>
+    <div class="profile-actions">
+        <a href="/payments/select-plan/{{ user.id }}" class="btn">
+            💰 Registrar Pago
+        </a>
+    </div>
+</div>
+
+<div class="profile-grid">
+    <div class="side-panel">
+        <div class="section-card">
+            <h3 class="section-title"><span>📋</span> Resumen de Estado</h3>
+            <div class="data-row">
+                <span class="data-label">Estado</span>
+                {% if user.subscriptions and user.subscriptions[-1].end_date > now %}
+                <span class="badge-status status-active">Activo</span>
+                {% else %}
+                <span class="badge-status status-expired">Expirado</span>
+                {% endif %}
+            </div>
+            <div class="data-row">
+                <span class="data-label">Plan Actual</span>
+                <span class="data-value">{{ user.subscriptions[-1].plan.name if user.subscriptions else 'Ninguno'
+                    }}</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Miembro desde</span>
+                <span class="data-value">{{ user.created_at.strftime('%d/%m/%Y') }}</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3 class="section-title"><span>💪</span> Rutinas Asignadas</h3>
+            {% if user.routines %}
+            {% for routine in user.routines %}
+            <a href="/routines/{{ routine.id }}" class="btn btn-outline"
+                style="width: 100%; justify-content: space-between; margin-bottom: 0.75rem;">
+                <span>{{ routine.name }}</span>
+                <span>→</span>
+            </a>
+            {% endfor %}
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center;">Sin rutinas asignadas.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="main-panel">
+        <div class="section-card">
+            <h3 class="section-title"><span>💳</span> Historial de Pagos</h3>
+            {% if user.payments %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Concepto</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in user.payments | reverse %}
+                    <tr>
+                        <td>{{ payment.date.strftime('%d/%m/%Y') }}</td>
+                        <td>Pago de Membresía</td>
+                        <td style="font-weight: 600;">${{ "{:,.2f}".format(payment.amount) }}</td>
+                        <td><span class="badge-status status-active">Completado</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No hay registros de pagos.</p>
+            {% endif %}
+        </div>
+
+        <div class="section-card">
+            <h3 class="section-title"><span>🏃</span> Registro de Asistencias</h3>
+            {% if user.attendances %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora Entrada</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in user.attendances | reverse %}
+                    <tr>
+                        <td>{{ entry.check_in_time.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ entry.check_in_time.strftime('%H:%M') }}</td>
+                        <td><span style="color: var(--accent);">✅ Presente</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Aún no hay registros de asistencia.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

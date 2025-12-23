@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Gym Manager Pro{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .welcome-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .welcome-section h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .welcome-section p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--surface);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--surface-border);
+        padding: 2rem;
+        border-radius: 1.25rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), transparent);
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .stat-trend {
+        font-size: 0.875rem;
+        margin-top: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .trend-up {
+        color: var(--accent);
+    }
+
+    .chart-container {
+        grid-column: 1 / -1;
+        background: var(--surface);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--surface-border);
+        padding: 2rem;
+        border-radius: 1.25rem;
+        margin-bottom: 2rem;
+        height: 350px;
+    }
+
+    @media (min-width: 1024px) {
+        .chart-container {
+            grid-column: span 2;
+        }
+
+        .quick-actions-panel {
+            grid-column: span 1;
+        }
+    }
+
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 1024px) {
+        .dashboard-layout {
+            grid-template-columns: 2fr 1fr;
+        }
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .action-btn {
+        padding: 1.25rem;
+        text-align: center;
+        border-radius: 1rem;
+        background: var(--glass-bg);
+        border: 1px solid var(--surface-border);
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 600;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--primary);
+        transform: translateY(-4px);
+    }
+
+    .action-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(139, 92, 246, 0.1);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <h1>Hola, {{ user.name }} 👋</h1>
+    <p>Aquí tienes un resumen de lo que está pasando en el gimnasio hoy.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">
+            <span>👥 Socios Activos</span>
+        </div>
+        <div class="stat-value">{{ active_users_count }}</div>
+        <div class="stat-trend trend-up">
+            <span>↑ 12% este mes</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">
+            <span>💰 Ingresos Mensuales</span>
+        </div>
+        <div class="stat-value">${{ "{:,.0f}".format(monthly_revenue) }}</div>
+        <div class="stat-trend trend-up">
+            <span>↑ 8% vs mes anterior</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">
+            <span>🎟️ Asistencias Hoy</span>
+        </div>
+        <div class="stat-value">{{ today_attendance }}</div>
+        <div class="stat-trend">
+            <span style="color: var(--text-muted);">Pico a las 18:00</span>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-layout">
+    <div class="chart-container">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Tendencia de Ingresos</h3>
+        <canvas id="revenueChart"></canvas>
+    </div>
+
+    <div class="card quick-actions-panel">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Acciones Rápidas</h3>
+        <div class="quick-actions">
+            <a href="/users/new" class="action-btn">
+                <div class="action-icon">👤</div>
+                <span>Nuevo Socio</span>
+            </a>
+            <a href="/scan" class="action-btn">
+                <div class="action-icon">📷</div>
+                <span>Escanear</span>
+            </a>
+            <a href="/plans" class="action-btn">
+                <div class="action-icon">🏷️</div>
+                <span>Planes</span>
+            </a>
+            <a href="/routines" class="action-btn">
+                <div class="action-icon">💪</div>
+                <span>Rutinas</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('nav-home').classList.add('active');
+
+    // Revenue Chart Implementation
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.4)');
+    gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels | tojson }},
+        datasets: [{
+            label: 'Ingresos ($)',
+            data: {{ chart_data | tojson }},
+        borderColor: '#a78bfa',
+        backgroundColor: gradient,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#a78bfa',
+        pointBorderColor: '#fff',
+        pointHoverRadius: 6
+            }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                ticks: { color: '#94a3b8' }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { color: '#94a3b8' }
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        }
+    }
+    });
+</script>
+{% endblock %}

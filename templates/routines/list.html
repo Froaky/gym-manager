@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Plantillas de Rutinas - Gym Manager Pro{% endblock %}
+
+{% block head %}
+<style>
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .table-container {
+        border-radius: 1.25rem;
+        overflow: hidden;
+        border: 1px solid var(--surface-border);
+        background: var(--surface);
+        backdrop-filter: blur(10px);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    th {
+        background: rgba(15, 23, 42, 0.4);
+        padding: 1.25rem 1.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--surface-border);
+    }
+
+    td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--surface-border);
+        color: var(--text);
+        vertical-align: middle;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    .routine-name {
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--primary);
+    }
+
+    .exercise-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--primary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 99px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+
+    .action-links {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--surface-border);
+        background: var(--glass-bg);
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .action-btn:hover {
+        border-color: var(--primary);
+        color: var(--text);
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .action-btn.delete {
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .action-btn.delete:hover {
+        border-color: var(--danger);
+        color: var(--danger);
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        max-width: 500px;
+        width: 100%;
+        animation: modalAppear 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalAppear {
+        from {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid var(--surface-border);
+        border-radius: 0.75rem;
+        color: white;
+        font-family: inherit;
+        outline: none;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-actions">
+    <div>
+        <h1 style="margin: 0;">Plantillas de Rutinas</h1>
+        <p style="color: var(--text-muted); margin: 0.25rem 0 0 0;">Crea y organiza rutinas estándar para tus socios.
+        </p>
+    </div>
+    <button onclick="document.getElementById('newRoutineModal').style.display='flex'" class="btn">
+        <span>➕</span> Nueva Plantilla
+    </button>
+</div>
+
+<div class="table-container">
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Ejercicios</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for routine in routines %}
+                <tr>
+                    <td><span class="routine-name">{{ routine.name }}</span></td>
+                    <td><span style="color: var(--text-muted);">{{ routine.description or 'Sem descripción' }}</span>
+                    </td>
+                    <td><span class="exercise-count">🏋️ {{ routine.exercises|length }} ejercicios</span></td>
+                    <td>
+                        <div class="action-links">
+                            <a href="/routines/{{ routine.id }}" class="action-btn" title="Editar Ejercicios">
+                                <span>✏️</span> Ver / Editar
+                            </a>
+                            <form action="/routines/delete/{{ routine.id }}" method="POST"
+                                onsubmit="return confirm('¿Borrar esta plantilla?');">
+                                <button type="submit" class="action-btn delete" title="Eliminar Plantilla">
+                                    <span>🗑️</span> Borrar
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                        No hay plantillas creadas todavía.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="newRoutineModal" class="modal-overlay">
+    <div class="card modal-content" style="position: relative;">
+        <button onclick="document.getElementById('newRoutineModal').style.display='none'"
+            style="position: absolute; top: 1.25rem; right: 1.25rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+
+        <h2 style="margin-bottom: 1.5rem;">Nueva Plantilla</h2>
+
+        <form action="/routines/new" method="POST">
+            <div class="form-group">
+                <label>Nombre de la Rutina</label>
+                <input type="text" name="name" class="form-control" required placeholder="Ej: Full Body - Avanzado">
+            </div>
+            <div class="form-group">
+                <label>Descripción (Opcional)</label>
+                <textarea name="description" rows="3" class="form-control"
+                    placeholder="Ej: Rutina enfocada en fuerza e hipertrofia..."></textarea>
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Crear Plantilla</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('nav-routines').classList.add('active');
+
+    // Close modal on click outside
+    window.onclick = function (event) {
+        let modal = document.getElementById('newRoutineModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+{% endblock %}

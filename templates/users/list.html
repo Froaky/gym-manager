@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Socios - Gym Manager Pro{% endblock %}
+
+{% block head %}
+<style>
+    .header-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-container {
+        position: relative;
+        max-width: 400px;
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        background: var(--surface);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--surface-border);
+        border-radius: 1rem;
+        color: white;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .table-container {
+        border-radius: 1.25rem;
+        overflow: hidden;
+        border: 1px solid var(--surface-border);
+        background: var(--surface);
+        backdrop-filter: blur(10px);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    th {
+        background: rgba(15, 23, 42, 0.4);
+        padding: 1.25rem 1.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--surface-border);
+    }
+
+    td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--surface-border);
+        color: var(--text);
+        vertical-align: middle;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        margin-right: 1rem;
+    }
+
+    .user-cell {
+        display: flex;
+        align-items: center;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-name {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .user-email {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 99px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .badge-primary {
+        background: rgba(139, 92, 246, 0.15);
+        color: var(--primary);
+    }
+
+    .badge-accent {
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--accent);
+    }
+
+    .action-links {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .action-btn {
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--surface-border);
+        background: var(--glass-bg);
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+        border-color: var(--primary);
+        color: var(--text);
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .action-btn.pay:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(16, 185, 129, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="header-actions">
+        <div>
+            <h1 style="margin: 0;">Socios</h1>
+            <p style="color: var(--text-muted); margin: 0.25rem 0 0 0;">Gestiona la membresía y rutinas de tus clientes.
+            </p>
+        </div>
+        <a href="/users/new" class="btn">
+            <span>➕</span> Nuevo Socio
+        </a>
+    </div>
+
+    <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="memberSearch" class="search-input" placeholder="Buscar socio por nombre o email..."
+            onkeyup="filterUsers()">
+    </div>
+</div>
+
+<div class="table-container">
+    <div style="overflow-x: auto;">
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>Socio</th>
+                    <th>Estado</th>
+                    <th>Rol</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr class="user-row">
+                    <td>
+                        <div class="user-cell">
+                            <div class="user-avatar">{{ user.name[0] | upper }}</div>
+                            <div class="user-info">
+                                <a href="/users/{{ user.id }}" class="user-name"
+                                    style="text-decoration: none; color: inherit;">{{ user.name }}</a>
+                                <span class="user-email">{{ user.email }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if user.subscriptions %}
+                        {% set sub = user.subscriptions[-1] %}
+                        {% set days_left = (sub.end_date - now).days %}
+
+                        {% if days_left < 0 %} <span class="badge"
+                            style="background: rgba(239, 68, 68, 0.15); color: var(--danger);">Expirado</span>
+                            {% elif days_left < 3 %} <span class="badge"
+                                style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;"
+                                title="Vence en {{ days_left }} días">⚠️ Próximo a vencer</span>
+                                {% else %}
+                                <span class="badge badge-accent">Activo</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="badge"
+                                    style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted);">Sin
+                                    plan</span>
+                                {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-primary">{{ user.role }}</span>
+                    </td>
+                    <td>
+                        <div class="action-links">
+                            <a href="/users/{{ user.id }}" class="action-btn" title="Ver Perfil Completo">
+                                <span>👤</span> Ver
+                            </a>
+                            <a href="/payments/select-plan/{{ user.id }}" class="action-btn pay" title="Registrar Pago">
+                                <span>$</span> Pago
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                        No hay socios registrados.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById('nav-users').classList.add('active');
+
+    function filterUsers() {
+        const input = document.getElementById('memberSearch');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('usersTable');
+        const rows = table.getElementsByClassName('user-row');
+
+        for (let i = 0; i < rows.length; i++) {
+            const name = rows[i].getElementsByClassName('user-name')[0].innerText.toLowerCase();
+            const email = rows[i].getElementsByClassName('user-email')[0].innerText.toLowerCase();
+
+            if (name.includes(filter) || email.includes(filter)) {
+                rows[i].style.display = "";
+            } else {
+                rows[i].style.display = "none";
+            }
+        }
+    }
+</script>
+{% endblock %}

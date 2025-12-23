@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión - Gym Manager Pro{% endblock %}
+
+{% block head %}
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 200px);
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        padding: 3rem 2.5rem;
+        text-align: center;
+        background: var(--surface);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--surface-border);
+        border-radius: 2rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: cardFloat 0.6s ease-out;
+    }
+
+    @keyframes cardFloat {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .login-logo {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border-radius: 1.25rem;
+        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        box-shadow: 0 10px 20px var(--primary-glow);
+    }
+
+    .login-card h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .login-card p {
+        color: var(--text-muted);
+        margin-bottom: 2.5rem;
+    }
+
+    .form-group {
+        text-align: left;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        padding-left: 0.25rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1.25rem;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid var(--surface-border);
+        border-radius: 1rem;
+        color: white;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        background: rgba(15, 23, 42, 0.8);
+        box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+
+    .error-alert {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+        padding: 1rem;
+        border-radius: 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-logo">💪</div>
+        <h1>Gym Manager Pro</h1>
+        <p>Ingresa tus credenciales para continuar</p>
+
+        {% if error %}
+        <div class="error-alert">
+            <span>⚠️</span> {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="/auth/login" method="POST">
+            <div class="form-group">
+                <label for="email">Email de acceso</label>
+                <input type="email" id="email" name="email" class="form-control" required placeholder="admin@gym.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" class="form-control" required
+                    placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1.1rem; margin-top: 1rem;">
+                Iniciar Sesión
+            </button>
+        </form>
+
+        <div style="margin-top: 2rem; font-size: 0.875rem; color: var(--text-muted);">
+            ¿Olvidaste tu contraseña? Contacta al soporte técnico.
+        </div>
+    </div>
+</div>
+
+<script>
+    // Remove navbar on login page for a cleaner look
+    document.querySelector('nav').style.display = 'none';
+</script>
+{% endblock %}

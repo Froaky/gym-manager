@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Planes - Gym Manager Pro{% endblock %}
+
+{% block head %}
+<style>
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .plans-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .plan-card {
+        background: var(--surface);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--surface-border);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .plan-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary);
+    }
+
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--text);
+    }
+
+    .plan-price {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 1.5rem 0;
+        color: var(--text);
+        display: flex;
+        align-items: baseline;
+        gap: 0.25rem;
+    }
+
+    .plan-price span {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem 0;
+        flex-grow: 1;
+    }
+
+    .plan-feature {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+
+    .delete-plan-btn {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: all 0.2s ease;
+    }
+
+    .delete-plan-btn:hover {
+        opacity: 1;
+        background: var(--danger);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-actions">
+    <div>
+        <h1 style="margin: 0;">Planes de Membresía</h1>
+        <p style="color: var(--text-muted); margin: 0.25rem 0 0 0;">Configura las diferentes opciones para tus socios.
+        </p>
+    </div>
+    <a href="/plans/new" class="btn">
+        <span style="margin-right: 0.5rem;">➕</span> Crear Nuevo Plan
+    </a>
+</div>
+
+<div class="plans-grid">
+    {% for plan in plans %}
+    <div class="plan-card">
+        <form action="/plans/delete/{{ plan.id }}" method="POST" onsubmit="return confirm('¿Eliminar este plan?');">
+            <button type="submit" class="delete-plan-btn" title="Eliminar Plan">&times;</button>
+        </form>
+
+        <h2 class="plan-name">{{ plan.name }}</h2>
+
+        <div class="plan-price">
+            ${{ "{:,.0f}".format(plan.price) }}
+            <span>/ {{ plan.duration_days }} días</span>
+        </div>
+
+        <ul class="plan-features">
+            <li class="plan-feature"><span>✅</span> Acceso total al gimnasio</li>
+            <li class="plan-feature"><span>✅</span> Rutinas personalizadas</li>
+            {% if plan.description %}
+            <li class="plan-feature" style="font-style: italic; opacity: 0.8; margin-top: 1rem;">{{ plan.description }}
+            </li>
+            {% endif %}
+        </ul>
+
+        <a href="#" class="btn btn-outline" style="width: 100%;">Editar Plan</a>
+    </div>
+    {% else %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">No hay planes configurados todavía.</p>
+        <a href="/plans/new" class="btn">Crear primer plan</a>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    document.getElementById('nav-plans').classList.add('active');
+</script>
+{% endblock %}

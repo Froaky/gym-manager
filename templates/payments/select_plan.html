@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Seleccionar Plan - Gym Manager{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center; margin-bottom: 2rem;">Elegir Plan para {{ user.name }}</h1>
+
+<div class="stats-grid">
+    {% for plan in plans %}
+    <div class="stat-card" style="border-left-color: var(--primary);">
+        <h2 style="margin-top: 0; font-size: 1.5rem;">{{ plan.name }}</h2>
+        <div style="font-size: 2.5rem; font-weight: bold; margin: 1rem 0;">
+            ${{ plan.price }}
+        </div>
+        <div style="color: var(--text-muted); margin-bottom: 1rem;">
+            Duración: {{ plan.duration_days }} días
+        </div>
+
+        <form action="/payments/process" method="POST">
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+            <input type="hidden" name="plan_id" value="{{ plan.id }}">
+            <input type="hidden" name="amount" value="{{ plan.price }}">
+            <button type="submit" class="btn" style="width: 100%;">Seleccionar</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center;">
+        <p>No hay planes disponibles.</p>
+        <a href="/plans/new" class="btn">Crear un Plan</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

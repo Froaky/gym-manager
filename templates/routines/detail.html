@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ routine.name }} - Detalles{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <a href="/routines/user/{{ routine.user_id }}" style="color: var(--text-muted); text-decoration: none;">&larr;
+        Volver a Rutinas</a>
+</div>
+
+<h1>{{ routine.name }}</h1>
+<p style="color: var(--text-muted); margin-bottom: 2rem;">{{ routine.description or 'Sin descripción' }}</p>
+
+<!-- List Exercises -->
+<div style="display: grid; gap: 1rem; margin-bottom: 3rem;">
+    {% for exercise in routine.exercises %}
+    <div class="card" style="display: flex; gap: 1rem; align-items: center; border-left: 4px solid var(--primary);">
+        <div style="flex: 1;">
+            <h3 style="margin: 0;">{{ exercise.name }}</h3>
+            {% if exercise.notes %}
+            <p style="margin: 0.25rem 0 0; color: var(--text-muted); font-size: 0.875rem;">{{ exercise.notes }}</p>
+            {% endif %}
+        </div>
+        <div style="text-align: right;">
+            <div style="font-weight: bold; font-size: 1.25rem;">{{ exercise.sets }} x {{ exercise.reps }}</div>
+            {% if exercise.weight %}
+            <div style="color: #10b981;">{{ exercise.weight }}</div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <p style="text-align: center; color: var(--text-muted);">No hay ejercicios en esta rutina.</p>
+    {% endfor %}
+</div>
+
+<!-- Add Exercise Form -->
+<div class="card">
+    <h3>Agregar Ejercicio</h3>
+    <form action="/routines/{{ routine.id }}/add-exercise" method="POST">
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+            <input type="text" name="name" required placeholder="Ejercicio (Ej: Press Banca)"
+                style="padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #334155; background: #0f172a; color: white;">
+
+            <input type="number" name="sets" required placeholder="Series (Ej: 4)"
+                style="padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #334155; background: #0f172a; color: white;">
+
+            <input type="text" name="reps" required placeholder="Reps (Ej: 10-12)"
+                style="padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #334155; background: #0f172a; color: white;">
+
+            <input type="text" name="weight" placeholder="Peso (Ej: 60kg)"
+                style="padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #334155; background: #0f172a; color: white;">
+        </div>
+        <input type="text" name="notes" placeholder="Notas (Ej: Pausa de 2 min)"
+            style="width: 100%; padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 1rem;">
+
+        <button type="submit" class="btn" style="width: 100%;">Agregar</button>
+    </form>
+</div>
+{% endblock %}
