@@ -6,7 +6,7 @@ from database import SessionDep
 from models import User
 import uuid
 
-from routers.auth import get_current_user, get_password_hash
+from routers.auth import get_current_user, get_password_hash, admin_required
 from typing import Optional
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -16,24 +16,25 @@ templates = Jinja2Templates(directory="templates")
 async def list_users(
     request: Request, 
     session: SessionDep,
-    current_user_id: Optional[str] = Depends(get_current_user)
+    current_user: dict = Depends(admin_required)
 ):
-    if not current_user_id:
-        return RedirectResponse(url="/auth/login", status_code=303)
     users = session.exec(select(User)).all()
     from datetime import datetime
     return templates.TemplateResponse(
         request=request, 
         name="users/list.html", 
-        context={"users": users, "now": datetime.utcnow()}
+        context={"users": users, "now": datetime.utcnow(), "user": current_user}
     )
 
 @router.get("/new", response_class=HTMLResponse)
-async def new_user_form(request: Request):
+async def new_user_form(
+    request: Request,
+    current_user: dict = Depends(admin_required)
+):
     return templates.TemplateResponse(
         request=request, 
         name="users/form.html", 
-        context={}
+        context={"user": current_user}
     )
 
 @router.post("/new")
@@ -42,10 +43,8 @@ async def create_user(
     name: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
-    current_user_id: Optional[str] = Depends(get_current_user)
+    current_user: dict = Depends(admin_required)
 ):
-    if not current_user_id:
-       return RedirectResponse(url="/auth/login", status_code=303)
     
     # Generate a unique QR code identifier for the user
     qr_code = str(uuid.uuid4())
@@ -62,10 +61,8 @@ async def user_detail(
     request: Request,
     user_id: int,
     session: SessionDep,
-    current_user_id: Optional[str] = Depends(get_current_user)
+    current_user: dict = Depends(admin_required)
 ):
-    if not current_user_id:
-        return RedirectResponse(url="/auth/login", status_code=303)
         
     user = session.get(User, user_id)
     if not user:
@@ -75,5 +72,5 @@ async def user_detail(
     return templates.TemplateResponse(
         request=request,
         name="users/profile.html",
-        context={"user": user, "now": datetime.utcnow()}
+        context={"user": user, "now": datetime.utcnow(), "admin_user": current_user}
     )

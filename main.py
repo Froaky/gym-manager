@@ -43,12 +43,13 @@ from routers import auth
 async def dashboard(
     request: Request,
     session: SessionDep,
-    current_user_id: Optional[str] = Depends(auth.get_current_user)
+    current_user: Optional[dict] = Depends(auth.get_current_user)
 ):
-    if not current_user_id:
+    if not current_user:
         return RedirectResponse(url="/auth/login", status_code=303)
         
-    user = session.get(User, current_user_id)
+    user_id = current_user.get("sub")
+    user = session.get(User, user_id)
     if not user:
         return RedirectResponse(url="/auth/login", status_code=303)
         

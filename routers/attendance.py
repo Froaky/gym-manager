@@ -6,15 +6,21 @@ from database import SessionDep
 from models import User, Attendance
 from datetime import datetime
 
+from routers.auth import get_current_user
+from typing import Optional
+
 router = APIRouter(tags=["attendance"])
 templates = Jinja2Templates(directory="templates")
 
 @router.get("/scan", response_class=HTMLResponse)
-async def scan_page(request: Request):
+async def scan_page(
+    request: Request,
+    current_user: Optional[User] = Depends(get_current_user)
+):
     return templates.TemplateResponse(
         request=request, 
         name="scan.html", 
-        context={}
+        context={"user": current_user}
     )
 
 @router.post("/attendance/checkin")

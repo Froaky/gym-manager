@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Rutinas de {{ user.name }} - Gym Manager{% endblock %}
+{% block title %}Rutinas de {{ target_user.name }} - Gym Manager{% endblock %}
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-    <h1>Rutinas de {{ user.name }}</h1>
+    <h1>Rutinas de {{ target_user.name }}</h1>
     <a href="/users" class="btn" style="background: var(--surface); color: var(--text);">Volver</a>
 </div>
 
@@ -21,10 +21,10 @@
     <div class="card" style="width: 100%; max-width: 500px; position: relative;">
         <span onclick="document.getElementById('assignRoutineModal').style.display='none'"
             style="position: absolute; top: 1rem; right: 1rem; cursor: pointer; font-size: 1.5rem;">&times;</span>
-        <h2 style="margin-bottom: 1.5rem;">Asignar Rutina a {{ user.name }}</h2>
+        <h2 style="margin-bottom: 1.5rem;">Asignar Rutina a {{ target_user.name }}</h2>
 
         <form action="/routines/assign" method="POST">
-            <input type="hidden" name="user_id" value="{{ user.id }}">
+            <input type="hidden" name="user_id" value="{{ target_user.id }}">
 
             <div style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 0.5rem;">Seleccionar Plantilla</label>
@@ -60,7 +60,7 @@
             <small style="color: var(--text-muted);">{{ routine.exercises|length }} Ejercicios</small>
         </div>
         <form action="/routines/unassign" method="POST" onsubmit="return confirm('¿Quitar esta rutina del usuario?');">
-            <input type="hidden" name="user_id" value="{{ user.id }}">
+            <input type="hidden" name="user_id" value="{{ target_user.id }}">
             <input type="hidden" name="routine_id" value="{{ routine.id }}">
             <button type="submit"
                 style="background: none; border: none; color: #ef4444; cursor: pointer;">Desasignar</button>

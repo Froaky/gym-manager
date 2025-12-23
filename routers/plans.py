@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from database import SessionDep
 from models import Plan
 
-from routers.auth import get_current_user
+from routers.auth import get_current_user, admin_required
 from typing import Optional
 
 router = APIRouter(prefix="/plans", tags=["plans"])
@@ -15,23 +15,24 @@ templates = Jinja2Templates(directory="templates")
 async def list_plans(
     request: Request, 
     session: SessionDep,
-    current_user_id: Optional[str] = Depends(get_current_user)
+    current_user: dict = Depends(admin_required)
 ):
-    if not current_user_id:
-        return RedirectResponse(url="/auth/login", status_code=303)
     plans = session.exec(select(Plan)).all()
     return templates.TemplateResponse(
         request=request, 
         name="plans/list.html", 
-        context={"plans": plans}
+        context={"plans": plans, "user": current_user}
     )
 
 @router.get("/new", response_class=HTMLResponse)
-async def new_plan_form(request: Request):
+async def new_plan_form(
+    request: Request,
+    current_user: dict = Depends(admin_required)
+):
     return templates.TemplateResponse(
         request=request, 
         name="plans/form.html", 
-        context={}
+        context={"user": current_user}
     )
 
 @router.post("/new")
@@ -40,7 +41,8 @@ async def create_plan(
     name: str = Form(...),
     price: float = Form(...),
     duration_days: int = Form(...),
-    description: str = Form(None)
+    description: str = Form(None),
+    current_user: dict = Depends(admin_required)
 ):
     plan = Plan(name=name, price=price, duration_days=duration_days, description=description)
     session.add(plan)
@@ -50,7 +52,8 @@ async def create_plan(
 @router.post("/delete/{plan_id}")
 async def delete_plan(
     plan_id: int,
-    session: SessionDep
+    session: SessionDep,
+    current_user: dict = Depends(admin_required)
 ):
     plan = session.get(Plan, plan_id)
     if plan:

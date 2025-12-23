@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from database import SessionDep
 from models import Routine, Exercise, User
 
-from routers.auth import get_current_user
+from routers.auth import get_current_user, admin_required
 from typing import Optional
 
 router = APIRouter(prefix="/routines", tags=["routines"])
@@ -15,15 +15,13 @@ templates = Jinja2Templates(directory="templates")
 async def list_routines(
     request: Request, 
     session: SessionDep,
-    current_user_id: Optional[str] = Depends(get_current_user)
+    current_user: dict = Depends(admin_required)
 ):
-    if not current_user_id:
-        return RedirectResponse(url="/auth/login", status_code=303)
     routines = session.exec(select(Routine)).all()
     return templates.TemplateResponse(
         request=request, 
         name="routines/list.html", 
-        context={"routines": routines}
+        context={"routines": routines, "user": current_user}
     )
 
 @router.get("/user/{user_id}", response_class=HTMLResponse)
@@ -31,23 +29,22 @@ async def list_user_routines(
     user_id: int, 
     request: Request, 
     session: SessionDep,
-    current_user_id: Optional[str] = Depends(get_current_user)
+    current_user: dict = Depends(admin_required)
 ):
-    if not current_user_id:
-        return RedirectResponse(url="/auth/login", status_code=303)
     user = session.get(User, user_id)
     all_routines = session.exec(select(Routine)).all()
     return templates.TemplateResponse(
         request=request, 
         name="routines/user_list.html", 
-        context={"user": user, "routines": user.routines, "all_routines": all_routines}
+        context={"target_user": user, "routines": user.routines, "all_routines": all_routines, "user": current_user}
     )
 
 @router.post("/new")
 async def create_routine(
     session: SessionDep,
     name: str = Form(...),
-    description: str = Form(None)
+    description: str = Form(None),
+    current_user: dict = Depends(admin_required)
 ):
     routine = Routine(name=name, description=description)
     session.add(routine)
@@ -58,7 +55,8 @@ async def create_routine(
 async def assign_routine(
     session: SessionDep,
     user_id: int = Form(...),
-    routine_id: int = Form(...)
+    routine_id: int = Form(...),
+    current_user: dict = Depends(admin_required)
 ):
     from models import UserRoutine
     user_routine = UserRoutine(user_id=user_id, routine_id=routine_id)
@@ -70,7 +68,8 @@ async def assign_routine(
 async def unassign_routine(
     session: SessionDep,
     user_id: int = Form(...),
-    routine_id: int = Form(...)
+    routine_id: int = Form(...),
+    current_user: dict = Depends(admin_required)
 ):
     from models import UserRoutine
     user_routine = session.get(UserRoutine, (user_id, routine_id))
@@ -80,12 +79,17 @@ async def unassign_routine(
     return RedirectResponse(url=f"/routines/user/{user_id}", status_code=303)
 
 @router.get("/{routine_id}", response_class=HTMLResponse)
-async def view_routine(routine_id: int, request: Request, session: SessionDep):
+async def view_routine(
+    routine_id: int, 
+    request: Request, 
+    session: SessionDep,
+    current_user: dict = Depends(admin_required)
+):
     routine = session.get(Routine, routine_id)
     return templates.TemplateResponse(
         request=request, 
         name="routines/detail.html", 
-        context={"routine": routine}
+        context={"routine": routine, "user": current_user}
     )
 
 @router.post("/{routine_id}/add-exercise")
@@ -96,7 +100,8 @@ async def add_exercise(
     sets: int = Form(...),
     reps: str = Form(...),
     weight: str = Form(None),
-    notes: str = Form(None)
+    notes: str = Form(None),
+    current_user: dict = Depends(admin_required)
 ):
     exercise = Exercise(
         routine_id=routine_id,
@@ -113,7 +118,8 @@ async def add_exercise(
 @router.post("/delete/{routine_id}")
 async def delete_routine(
     routine_id: int,
-    session: SessionDep
+    session: SessionDep,
+    current_user: dict = Depends(admin_required)
 ):
     routine = session.get(Routine, routine_id)
     if routine:

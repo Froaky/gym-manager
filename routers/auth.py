@@ -7,12 +7,15 @@ from models import User
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
-from typing import Optional
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Setup Security
-SECRET_KEY = "super-secret-key-change-me"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 300
+SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key-change-me")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 300))
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
@@ -32,19 +35,28 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# Dependency to populate user in Request (Middleware-like)
-async def get_current_user(request: Request):
+# Dependency to get the current authenticated user object
+async def get_current_user(request: Request, session: SessionDep):
     token = request.cookies.get("access_token")
     if not token:
         return None
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        user_id = payload.get("sub")
+        if not user_id:
             return None
-        return user_id
-    except jwt.PyJWTError:
+        return session.get(User, user_id)
+    except Exception:
         return None
+
+# Combined dependency for admin access
+async def admin_required(user: Optional[User] = Depends(get_current_user)):
+    if not user or user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requieren permisos de administrador"
+        )
+    return user
 
 # Routes
 @router.get("/login", response_class=HTMLResponse)
@@ -90,9 +102,9 @@ async def change_password(
     session: SessionDep,
     new_password: str = Form(...),
     confirm_password: str = Form(...),
-    current_user_id: Optional[str] = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user)
 ):
-    if not current_user_id:
+    if not current_user:
         return RedirectResponse(url="/auth/login", status_code=303)
         
     if new_password != confirm_password:
@@ -102,10 +114,9 @@ async def change_password(
             context={"error": "Las contraseñas no coinciden"}
         )
         
-    user = session.get(User, current_user_id)
-    user.hashed_password = get_password_hash(new_password)
-    user.must_change_password = False
-    session.add(user)
+    current_user.hashed_password = get_password_hash(new_password)
+    current_user.must_change_password = False
+    session.add(current_user)
     session.commit()
     
     return RedirectResponse(url="/", status_code=303)

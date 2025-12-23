@@ -5,18 +5,24 @@ from sqlmodel import Session, select
 from database import SessionDep
 from models import Payment, Subscription, Plan, User
 from datetime import datetime, timedelta
+from routers.auth import admin_required
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 templates = Jinja2Templates(directory="templates")
 
 @router.get("/select-plan/{user_id}", response_class=HTMLResponse)
-async def select_plan_page(user_id: int, request: Request, session: SessionDep):
+async def select_plan_page(
+    user_id: int, 
+    request: Request, 
+    session: SessionDep,
+    current_user: dict = Depends(admin_required)
+):
     user = session.get(User, user_id)
     plans = session.exec(select(Plan)).all()
     return templates.TemplateResponse(
         request=request, 
         name="payments/select_plan.html", 
-        context={"user": user, "plans": plans}
+        context={"client": user, "plans": plans, "user": current_user}
     )
 
 @router.post("/process")
@@ -24,7 +30,8 @@ async def process_payment(
     session: SessionDep,
     user_id: int = Form(...),
     plan_id: int = Form(...),
-    amount: float = Form(...)
+    amount: float = Form(...),
+    current_user: dict = Depends(admin_required)
 ):
     # Get Plan details for duration
     plan = session.get(Plan, plan_id)
