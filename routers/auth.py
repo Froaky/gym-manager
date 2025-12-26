@@ -6,6 +6,7 @@ from database import SessionDep
 from models import User
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
+from typing import Optional
 import jwt
 import os
 from dotenv import load_dotenv
