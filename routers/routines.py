@@ -83,9 +83,29 @@ async def view_routine(
     routine_id: int, 
     request: Request, 
     session: SessionDep,
-    current_user: dict = Depends(admin_required)
+    current_user: dict = Depends(get_current_user)
 ):
+    if not current_user:
+        return RedirectResponse(url="/auth/login", status_code=303)
+
     routine = session.get(Routine, routine_id)
+    if not routine:
+        return RedirectResponse(url="/routines", status_code=303)
+    
+    # Check permissions
+    is_admin = current_user.role == "admin"
+    is_owner = False
+    
+    # Check if user owns the routine (if not admin)
+    if not is_admin:
+        for r in current_user.routines:
+            if r.id == routine.id:
+                is_owner = True
+                break
+    
+    if not is_admin and not is_owner:
+        return RedirectResponse(url="/", status_code=303)
+
     return templates.TemplateResponse(
         request=request, 
         name="routines/detail.html", 

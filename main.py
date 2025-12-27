@@ -78,12 +78,50 @@ async def dashboard(
     
     # 3. Today's Attendance
     try:
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         attendance_query = select(func.count(Attendance.id)).where(Attendance.check_in_time >= today_start)
         attendance = session.exec(attendance_query).one() or 0
     except Exception as e:
         print(f"Error calculating attendance: {e}")
         attendance = 0
+
+    # Calculate Trends
+    # Active Users Growth
+    try:
+        # Simple approximation: Compare with total users created before this month
+        # In a real app with history, we'd query active subscriptions at a point in time
+        first_day_current_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        users_this_month = session.exec(select(func.count(User.id)).where(User.created_at >= first_day_current_month)).one() or 0
+        total_users_prev_month = active_users - users_this_month
+        
+        if total_users_prev_month > 0:
+            active_users_growth = int((users_this_month / total_users_prev_month) * 100)
+        else:
+            active_users_growth = 100 if users_this_month > 0 else 0
+    except:
+        active_users_growth = 0
+
+    # Revenue Growth
+    try:
+        current_month_revenue = revenue
+        
+        # Last Month Revenue
+        last_month = first_day_current_month - timedelta(days=1)
+        first_day_last_month = last_month.replace(day=1)
+        
+        prev_rev_query = select(func.sum(Payment.amount)).where(
+            Payment.date >= first_day_last_month, 
+            Payment.date < first_day_current_month
+        )
+        prev_revenue = session.exec(prev_rev_query).one() or 0
+        
+        if prev_revenue > 0:
+            revenue_growth = int(((current_month_revenue - prev_revenue) / prev_revenue) * 100)
+        else:
+            revenue_growth = 100 if current_month_revenue > 0 else 0
+    except Exception as e:
+        print(f"Error calculating revenue growth: {e}")
+        revenue_growth = 0
     
     # 4. Last 7 Days Revenue (for Chart)
     days = []
@@ -110,7 +148,9 @@ async def dashboard(
             "monthly_revenue": float(revenue),
             "today_attendance": attendance,
             "chart_labels": days,
-            "chart_data": daily_revenue
+            "chart_data": daily_revenue,
+            "active_users_growth": active_users_growth,
+            "revenue_growth": revenue_growth
         }
     )
 

@@ -123,12 +123,12 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="price">Precio ($)</label>
-                    <input type="number" id="price" name="price" class="form-control" required step="0.01"
+                    <input type="number" id="price" name="price" class="form-control" required step="0.01" min="0"
                         placeholder="99.99">
                 </div>
                 <div class="form-group">
                     <label for="duration_days">Duración (Días)</label>
-                    <input type="number" id="duration_days" name="duration_days" class="form-control" required
+                    <input type="number" id="duration_days" name="duration_days" class="form-control" required min="1"
                         placeholder="30">
                 </div>
             </div>

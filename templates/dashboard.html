@@ -164,8 +164,8 @@
             <span>👥 Socios Activos</span>
         </div>
         <div class="stat-value">{{ active_users_count }}</div>
-        <div class="stat-trend trend-up">
-            <span>↑ 12% este mes</span>
+        <div class="stat-trend {{ 'trend-up' if active_users_growth >= 0 else 'trend-down' }}">
+            <span>{{ "↑" if active_users_growth >= 0 else "↓" }} {{ active_users_growth }}% este mes</span>
         </div>
     </div>
     <div class="stat-card">
@@ -173,8 +173,8 @@
             <span>💰 Ingresos Mensuales</span>
         </div>
         <div class="stat-value">${{ "{:,.0f}".format(monthly_revenue) }}</div>
-        <div class="stat-trend trend-up">
-            <span>↑ 8% vs mes anterior</span>
+        <div class="stat-trend {{ 'trend-up' if revenue_growth >= 0 else 'trend-down' }}">
+            <span>{{ "↑" if revenue_growth >= 0 else "↓" }} {{ revenue_growth }}% vs mes anterior</span>
         </div>
     </div>
     <div class="stat-card">
