@@ -11,6 +11,14 @@
 <h1>{{ routine.name }}</h1>
 <p style="color: var(--text-muted); margin-bottom: 2rem;">{{ routine.description or 'Sin descripción' }}</p>
 
+{% if routine.frequency %}
+<div
+    style="margin-bottom: 2rem; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 1rem; border: 1px solid var(--primary-glow);">
+    <strong style="color: var(--primary);">📅 Frecuencia Sugerida:</strong>
+    <span style="color: white; margin-left: 0.5rem;">{{ routine.frequency }}</span>
+</div>
+{% endif %}
+
 <!-- List Exercises -->
 <div style="display: grid; gap: 1rem; margin-bottom: 3rem;">
     {% for exercise in routine.exercises %}

@@ -152,7 +152,12 @@
             <div class="data-row">
                 <span class="data-label">Estado</span>
                 {% if user.subscriptions and user.subscriptions[-1].end_date > now %}
-                <span class="badge-status status-active">Activo</span>
+                <div style="text-align: right;">
+                    <span class="badge-status status-active">Activo</span>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                        Vence: {{ user.subscriptions[-1].end_date.strftime('%d/%m/%Y') }}
+                    </div>
+                </div>
                 {% else %}
                 <span class="badge-status status-expired">Expirado</span>
                 {% endif %}

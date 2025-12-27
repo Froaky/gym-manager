@@ -196,8 +196,11 @@
                     <td><span class="exercise-count">🏋️ {{ routine.exercises|length }} ejercicios</span></td>
                     <td>
                         <div class="action-links">
-                            <a href="/routines/{{ routine.id }}" class="action-btn" title="Editar Ejercicios">
-                                <span>✏️</span> Ver / Editar
+                            <a href="/routines/edit/{{ routine.id }}" class="action-btn" title="Editar Detalles">
+                                <span>📝</span> Editar
+                            </a>
+                            <a href="/routines/{{ routine.id }}" class="action-btn" title="Ver Ejercicios">
+                                <span>👁️</span> Ejercicios
                             </a>
                             <form action="/routines/delete/{{ routine.id }}" method="POST"
                                 onsubmit="return confirm('¿Borrar esta plantilla?');">
@@ -236,6 +239,10 @@
                 <label>Descripción (Opcional)</label>
                 <textarea name="description" rows="3" class="form-control"
                     placeholder="Ej: Rutina enfocada en fuerza e hipertrofia..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Frecuencia Sugerida (Opcional)</label>
+                <input type="text" name="frequency" class="form-control" placeholder="Ej: Lunes, Miércoles y Viernes">
             </div>
             <button type="submit" class="btn" style="width: 100%;">Crear Plantilla</button>
         </form>

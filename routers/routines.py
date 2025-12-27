@@ -44,9 +44,10 @@ async def create_routine(
     session: SessionDep,
     name: str = Form(...),
     description: str = Form(None),
+    frequency: str = Form(None),
     current_user: dict = Depends(admin_required)
 ):
-    routine = Routine(name=name, description=description)
+    routine = Routine(name=name, description=description, frequency=frequency)
     session.add(routine)
     session.commit()
     return RedirectResponse(url="/routines", status_code=303)
@@ -144,5 +145,39 @@ async def delete_routine(
     routine = session.get(Routine, routine_id)
     if routine:
         session.delete(routine)
+        session.commit()
+    return RedirectResponse(url="/routines", status_code=303)
+
+@router.get("/edit/{routine_id}", response_class=HTMLResponse)
+async def edit_routine_form(
+    routine_id: int,
+    request: Request,
+    session: SessionDep,
+    current_user: dict = Depends(admin_required)
+):
+    routine = session.get(Routine, routine_id)
+    if not routine:
+        return RedirectResponse(url="/routines", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="routines/edit.html",
+        context={"routine": routine, "user": current_user}
+    )
+
+@router.post("/edit/{routine_id}")
+async def update_routine(
+    routine_id: int,
+    session: SessionDep,
+    name: str = Form(...),
+    description: str = Form(None),
+    frequency: str = Form(None),
+    current_user: dict = Depends(admin_required)
+):
+    routine = session.get(Routine, routine_id)
+    if routine:
+        routine.name = name
+        routine.description = description
+        routine.frequency = frequency
+        session.add(routine)
         session.commit()
     return RedirectResponse(url="/routines", status_code=303)

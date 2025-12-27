@@ -68,6 +68,7 @@ class Attendance(AttendanceBase, table=True):
 class RoutineBase(SQLModel):
     name: str  # e.g. "Hypertrophy Push/Pull"
     description: Optional[str] = None
+    frequency: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Routine(RoutineBase, table=True):

@@ -60,3 +60,39 @@ async def delete_plan(
         session.delete(plan)
         session.commit()
     return RedirectResponse(url="/plans", status_code=303)
+
+@router.get("/edit/{plan_id}", response_class=HTMLResponse)
+async def edit_plan_form(
+    plan_id: int,
+    request: Request,
+    session: SessionDep,
+    current_user: dict = Depends(admin_required)
+):
+    plan = session.get(Plan, plan_id)
+    if not plan:
+        return RedirectResponse(url="/plans", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="plans/edit.html",
+        context={"plan": plan, "user": current_user}
+    )
+
+@router.post("/edit/{plan_id}")
+async def update_plan(
+    plan_id: int,
+    session: SessionDep,
+    name: str = Form(...),
+    price: float = Form(...),
+    duration_days: int = Form(...),
+    description: str = Form(None),
+    current_user: dict = Depends(admin_required)
+):
+    plan = session.get(Plan, plan_id)
+    if plan:
+        plan.name = name
+        plan.price = price
+        plan.duration_days = duration_days
+        plan.description = description
+        session.add(plan)
+        session.commit()
+    return RedirectResponse(url="/plans", status_code=303)
