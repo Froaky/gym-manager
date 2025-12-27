@@ -56,6 +56,8 @@ async def create_user(
     session.refresh(user)
     return RedirectResponse(url="/users", status_code=303)
 
+from models import User, Routine
+
 @router.get("/{user_id}", response_class=HTMLResponse)
 async def user_detail(
     request: Request,
@@ -67,10 +69,12 @@ async def user_detail(
     user = session.get(User, user_id)
     if not user:
         return RedirectResponse(url="/users", status_code=303)
+        
+    all_routines = session.exec(select(Routine)).all()
     
     from datetime import datetime
     return templates.TemplateResponse(
         request=request,
         name="users/profile.html",
-        context={"user": user, "now": datetime.utcnow(), "admin_user": current_user}
+        context={"user": user, "now": datetime.utcnow(), "admin_user": current_user, "all_routines": all_routines}
     )

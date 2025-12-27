@@ -173,7 +173,7 @@
         <div class="card-face card-back">
             <div class="qr-placeholder" style="background: white; padding: 1rem; border-radius: 1rem;">
                 <!-- We'll use a placeholder URL for now, but in a real app this would be user.qr_code_data -->
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ user.email }}" alt="QR Code"
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ user.qr_code_data }}" alt="QR Code"
                     style="display: block;">
             </div>
             <p style="font-size: 0.875rem; margin-top: 1rem; opacity: 0.8;">Escanea este código en recepción</p>
